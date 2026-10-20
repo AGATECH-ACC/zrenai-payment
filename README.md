@@ -218,6 +218,11 @@ are created: the trusted Django role owns its tables and handles authorization.
 Use a separate database for Preview; do not connect preview code to production
 inventory.
 
+`vercel.json` places the Django function in Singapore (`sin1`), alongside the
+Supabase database. Keep compute close to the database: Curlec expects webhook
+responses within five seconds, and cross-region database round trips can consume
+most of that window.
+
 Before the first deployment, migrate the connected database explicitly:
 
 ```sh
