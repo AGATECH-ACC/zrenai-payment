@@ -12,7 +12,7 @@ class DeploymentSettingsTests(SimpleTestCase):
         env = os.environ.copy()
         for name in (
             "DJANGO_SECRET_KEY", "TOKEN_ENCRYPTION_KEY", "DATABASE_URL",
-            "APP_BASE_URL", "ALLOWED_HOSTS", "VERCEL_URL",
+            "APP_BASE_URL", "ALLOWED_HOSTS", "VERCEL_URL", "DATABASE_SCHEMA",
         ):
             env.pop(name, None)
         env.update({

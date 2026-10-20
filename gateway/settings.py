@@ -75,6 +75,7 @@ TEMPLATES = [{
     ]},
 }]
 WSGI_APPLICATION = "gateway.wsgi.application"
+DATABASE_SCHEMA = os.getenv("DATABASE_SCHEMA", "")
 database_url = os.getenv("DATABASE_URL", "")
 if database_url:
     if urlparse(database_url).scheme not in ("postgres", "postgresql"):

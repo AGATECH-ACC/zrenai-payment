@@ -5,11 +5,14 @@ from unittest.mock import patch
 
 from cryptography.fernet import Fernet
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db import connection, connections
 from django.test import TransactionTestCase, override_settings
 
 from .models import Order, Product, TokenCode
 from .services import InventoryError, fulfill_payment, start_checkout
+from .apps import check_private_schema
 
 
 @skipUnless(connection.vendor == "postgresql", "Requires a PostgreSQL test database")
@@ -81,3 +84,19 @@ class PostgreSQLConcurrencyTests(TransactionTestCase):
         self.assertEqual(results[0].paid_at, results[1].paid_at)
         self.assertTrue(all(result.status == Order.Status.PAID for result in results))
         self.assertEqual(Order.objects.count(), 1)
+
+    def test_private_schema_tables_have_rls(self):
+        if not settings.DATABASE_SCHEMA:
+            self.skipTest("Run scripts/check_postgres.py for private-schema verification")
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+                "WHERE n.nspname = %s AND c.relkind = 'r' AND NOT c.relrowsecurity",
+                [settings.DATABASE_SCHEMA],
+            )
+            self.assertEqual(cursor.fetchall(), [])
+
+    def test_wrong_schema_fails_before_app_queries(self):
+        with override_settings(DATABASE_SCHEMA="unexpected_payment_schema"):
+            with self.assertRaises(ImproperlyConfigured):
+                check_private_schema(sender=None, connection=connection)

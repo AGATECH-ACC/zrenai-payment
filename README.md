@@ -190,6 +190,7 @@ Before deploying, configure these **Production** environment variables in the
 | `DJANGO_SECRET_KEY` | A long stable random application secret |
 | `TOKEN_ENCRYPTION_KEY` | A stable Fernet key; preserve the existing key when migrating inventory |
 | `DATABASE_URL` | PostgreSQL URL supplied by the connected Storage integration |
+| `DATABASE_SCHEMA` | `zrenai_payment` for the private Supabase schema |
 | `DEBUG` | `false` |
 | `APP_BASE_URL` | The canonical public HTTPS store URL |
 | `ALLOWED_HOSTS` | The canonical hostname, plus any other intended aliases, comma separated |
@@ -208,6 +209,12 @@ server-side cursors are disabled for compatibility with this pooler.
 Use a dedicated database role and private schema for Django's tables so they
 are not exposed through Supabase's Data API. Supabase publishable/service API
 keys do not replace the PostgreSQL password in `DATABASE_URL`.
+The database role's default `search_path` must point to `zrenai_payment`.
+The app verifies this on every database connection, preventing migrations or
+requests from accidentally using another schema. After migrations, it enables
+RLS and revokes PUBLIC table access for all tables owned by the app in that
+schema, including Django's account and session tables. No public RLS policies
+are created: the trusted Django role owns its tables and handles authorization.
 Use a separate database for Preview; do not connect preview code to production
 inventory.
 

@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from cryptography.fernet import Fernet
+import psycopg
 
 for command in ("initdb", "pg_ctl"):
     if not shutil.which(command):
@@ -29,12 +30,27 @@ with tempfile.TemporaryDirectory(prefix="zrenai-pg-") as directory:
             check=True, stdout=subprocess.DEVNULL,
         )
         env = os.environ.copy()
+        # New test databases inherit the private schema from this disposable template.
+        with psycopg.connect(
+            "postgresql://postgres@/template1?" + urlencode({"host": str(root)}),
+            autocommit=True,
+        ) as connection:
+            connection.execute("CREATE SCHEMA zrenai_payment")
+            connection.execute("REVOKE ALL ON SCHEMA zrenai_payment FROM PUBLIC")
+            connection.execute("ALTER ROLE postgres SET search_path TO zrenai_payment")
+        with psycopg.connect(
+            "postgresql://postgres@/postgres?" + urlencode({"host": str(root)}),
+            autocommit=True,
+        ) as connection:
+            connection.execute("CREATE SCHEMA zrenai_payment")
+            connection.execute("REVOKE ALL ON SCHEMA zrenai_payment FROM PUBLIC")
         env.update({
             "DATABASE_URL": "postgresql://postgres@/postgres?" + urlencode({"host": str(root)}),
             "VERCEL": "0", "DEBUG": "true",
             "APP_ENV_FILE": str(root / "unused.env"),
             "DJANGO_SECRET_KEY": "disposable-postgres-test-secret",
             "TOKEN_ENCRYPTION_KEY": Fernet.generate_key().decode(),
+            "DATABASE_SCHEMA": "zrenai_payment",
         })
         result = subprocess.run(
             [sys.executable, "manage.py", "test", "shop", "--noinput", "--verbosity=1"],
