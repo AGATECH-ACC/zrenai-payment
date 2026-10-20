@@ -20,7 +20,7 @@ class Command(BaseCommand):
             else:
                 remote = curlec.fetch_order(options["provider_order_id"])
                 with transaction.atomic():
-                    order = Order.objects.get(pk=remote.get("receipt"))
+                    order = Order.objects.select_for_update().get(pk=remote.get("receipt"))
                     validate_provider_order(order, remote)
                     if remote["id"] != options["provider_order_id"]:
                         raise curlec.PaymentError("The order reference does not match.")

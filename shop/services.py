@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -25,10 +26,12 @@ def validate_provider_order(order, remote):
 
 def start_checkout(user, product_id):
     curlec.require_keys()
-    # SQLite BEGIN IMMEDIATE takes the write lock before reading stock.
-    # Network calls stay outside this transaction.
+    # PostgreSQL row locks serialize each user's outstanding-order check and
+    # each product's stock allocation. SQLite uses BEGIN IMMEDIATE locally.
+    # All reservation paths acquire locks in user -> product -> token order.
     with transaction.atomic():
-        product = Product.objects.get(pk=product_id, active=True)
+        get_user_model().objects.select_for_update().get(pk=user.pk)
+        product = Product.objects.select_for_update().get(pk=product_id, active=True)
         existing = Order.objects.filter(user=user, product=product).exclude(status=Order.Status.PAID).first()
         if existing:
             if existing.provider_order_id and existing.status == Order.Status.PENDING:
@@ -36,7 +39,9 @@ def start_checkout(user, product_id):
             raise InventoryError("Your previous checkout is being checked. See My purchases or contact the store.")
         if Order.objects.filter(user=user).exclude(status=Order.Status.PAID).count() >= 3:
             raise InventoryError("Please complete your existing purchases before starting another.")
-        token = TokenCode.objects.filter(product=product, order__isnull=True).order_by("pk").first()
+        token = TokenCode.objects.filter(product=product, order__isnull=True).select_for_update(
+            of=("self",),
+        ).order_by("pk").first()
         if token is None:
             raise InventoryError("This product is sold out.")
         order = Order.objects.create(
@@ -47,7 +52,7 @@ def start_checkout(user, product_id):
         remote = curlec.create_order(order)
         validate_provider_order(order, remote)
         with transaction.atomic():
-            order = Order.objects.get(pk=order.pk)
+            order = Order.objects.select_for_update().get(pk=order.pk)
             validate_provider_order(order, remote)
             order.provider_order_id = remote["id"]
             # A webhook may have delivered the token before the create response arrived.
@@ -86,7 +91,7 @@ def fulfill_payment(payment_id, expected_order=None):
     if payment.get("status") != "captured" or payment.get("captured") is not True:
         return order  # Authorization alone must never release a token.
     with transaction.atomic():
-        order = Order.objects.get(pk=order.pk)
+        order = Order.objects.select_for_update().get(pk=order.pk)
         validate_provider_order(order, remote)
         if order.status == Order.Status.PAID:
             if order.payment_id != payment_id:

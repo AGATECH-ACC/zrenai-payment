@@ -12,7 +12,8 @@ them in another service.
 
 ## Local development
 
-Python 3.12 or later is recommended; this project was verified with Python 3.14.
+Python 3.12 or later is recommended; local checks use Python 3.14 and
+`.python-version` selects Python 3.12 for Vercel.
 
 ```sh
 python3 -m venv .venv
@@ -102,6 +103,8 @@ with your configured merchant keys.
   are not accepted as purchase parameters.
 - A code is reserved atomically **before** making a provider order.
 - Each code can belong to one purchase; each provider payment ID is unique.
+- PostgreSQL locks the buyer, product, and reserved inventory rows to protect
+  concurrent checkouts; payment fulfillment locks its order row.
 - Repeated checkout requests reuse the same pending order.
 - The checkout callback verifies HMAC using the server-stored provider order ID.
 - Webhooks verify HMAC over the raw request bytes.
@@ -159,6 +162,9 @@ provider POSTs; their HMAC checks replace browser CSRF authentication.
 ```sh
 .venv/bin/python manage.py test shop
 .venv/bin/python scripts/check_concurrency.py
+# If local PostgreSQL tools are installed: all tests, including row-lock races,
+# run inside a disposable cluster without reading or modifying cloud data.
+.venv/bin/python scripts/check_postgres.py
 .venv/bin/python manage.py check
 .venv/bin/python manage.py collectstatic --noinput
 ```
@@ -169,12 +175,66 @@ merchant charges. Runtime payment code always calls the real Curlec API.
 
 ## Hosting
 
-Run this version on a persistent host with HTTPS. SQLite transactions use
-`BEGIN IMMEDIATE`, serializing inventory allocation across local processes.
-Keep the database on a local persistent disk on one host. Do not place this
-database on an ephemeral/serverless filesystem or a shared network filesystem.
-Vercel deployment would require a separately provisioned persistent database
-and adapting the transaction strategy.
+### Vercel
+
+Vercel detects `manage.py` and `gateway.wsgi.application`. It automatically
+collects static files, so no custom build or output-directory override is needed.
+The project supports PostgreSQL using `DATABASE_URL`; SQLite is rejected on
+Vercel rather than silently losing orders between invocations.
+
+Before deploying, configure these **Production** environment variables in the
+`zrenai-payment` Vercel project:
+
+| Variable | Value/source |
+| --- | --- |
+| `DJANGO_SECRET_KEY` | A long stable random application secret |
+| `TOKEN_ENCRYPTION_KEY` | A stable Fernet key; preserve the existing key when migrating inventory |
+| `DATABASE_URL` | PostgreSQL URL supplied by the connected Storage integration |
+| `DEBUG` | `false` |
+| `APP_BASE_URL` | The canonical public HTTPS store URL |
+| `ALLOWED_HOSTS` | The canonical hostname, plus any other intended aliases, comma separated |
+| `CURLEC_KEY_ID` | Curlec Test Mode key ID until live acceptance testing is complete |
+| `CURLEC_KEY_SECRET` | Matching Curlec API secret |
+| `CURLEC_WEBHOOK_SECRET` | The exact secret configured on the Curlec webhook |
+
+Do not generate new encryption/session keys on every build. Add secrets through
+Vercel's environment settings or CLI stdin; never commit the local `.env`.
+The app also allows the deployment's exact `VERCEL_URL` hostname and trusts
+Vercel's HTTPS forwarding header. It does not allow every `*.vercel.app` host.
+
+Connect your Supabase PostgreSQL database using its transaction-pooler
+connection URL (port 6543, TLS required). Psycopg prepared statements and
+server-side cursors are disabled for compatibility with this pooler.
+Use a dedicated database role and private schema for Django's tables so they
+are not exposed through Supabase's Data API. Supabase publishable/service API
+keys do not replace the PostgreSQL password in `DATABASE_URL`.
+Use a separate database for Preview; do not connect preview code to production
+inventory.
+
+Before the first deployment, migrate the connected database explicitly:
+
+```sh
+vercel env pull .env.vercel.production --environment=production --yes
+APP_ENV_FILE=.env.vercel.production VERCEL=1 .venv/bin/python manage.py migrate --noinput
+APP_ENV_FILE=.env.vercel.production VERCEL=1 .venv/bin/python manage.py check --deploy
+APP_ENV_FILE=.env.vercel.production VERCEL=1 .venv/bin/python manage.py createsuperuser
+```
+
+Environment files contain secrets and must stay private. `APP_ENV_FILE` makes
+using cloud settings explicit; ordinary local development continues to load
+`.env` and the local database. Migrations are deliberately not run automatically
+by every build. After environment changes, redeploy—existing deployments retain
+their previous settings.
+
+Configure the Curlec webhook and callback allowlist for `APP_BASE_URL` as
+described above. A deployment succeeding does not by itself verify a payment.
+
+### Persistent host
+
+SQLite remains available on a single persistent host with HTTPS.
+Its transactions use `BEGIN IMMEDIATE`, serializing inventory allocation across
+local processes. Keep the database on local persistent disk, not an ephemeral
+or shared network filesystem. Set `DATABASE_URL` to use PostgreSQL instead.
 
 ```sh
 .venv/bin/python manage.py migrate --noinput
@@ -187,7 +247,8 @@ Use a trusted HTTPS reverse proxy, configure its secure scheme forwarding in
 Django to suit that host, and set `DEBUG=false`, `APP_BASE_URL`, and `ALLOWED_HOSTS`.
 Create a separate production admin with `manage.py createsuperuser`.
 Back up the database consistently using SQLite's backup API, plus the encryption
-key separately. Apply signup/checkout abuse limits at the ingress before opening
+key separately (or use your PostgreSQL provider's backup facilities).
+Apply signup/checkout abuse limits at the ingress before opening
 public sales; login lockouts and per-account unpaid-order limits are not a full
 inventory-abuse defense. Customer self-service password reset/email delivery
 is not configured; administrators can reset accounts after verifying ownership.

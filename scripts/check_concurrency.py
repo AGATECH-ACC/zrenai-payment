@@ -12,6 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gateway.settings")
 
 with tempfile.TemporaryDirectory(prefix="zrenai-concurrency-") as directory:
+    # Never let an exported or dotenv production connection override this fixture.
+    os.environ["DATABASE_URL"] = ""
+    os.environ["VERCEL"] = "0"
     os.environ["SQLITE_PATH"] = str(Path(directory) / "test.sqlite3")
     import django
     django.setup()
