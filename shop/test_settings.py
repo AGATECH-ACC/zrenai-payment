@@ -13,6 +13,7 @@ class DeploymentSettingsTests(SimpleTestCase):
         for name in (
             "DJANGO_SECRET_KEY", "TOKEN_ENCRYPTION_KEY", "DATABASE_URL",
             "APP_BASE_URL", "ALLOWED_HOSTS", "VERCEL_URL", "DATABASE_SCHEMA",
+            "ACADEMY_SSO_ENABLED", "ACADEMY_ORIGIN", "PAYMENT_SSO_SECRET",
         ):
             env.pop(name, None)
         env.update({

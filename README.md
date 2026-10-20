@@ -1,7 +1,7 @@
 # ZrenAI token code store
 
 A working Django application for selling unique token codes through Curlec.
-Admins enter products, MYR prices, and token keys. A customer signs up, pays
+Admins enter products, MYR prices, and token keys. A customer signs in, pays
 through Curlec Standard Checkout, and receives one reserved code in their
 purchase history after the server verifies a captured payment.
 
@@ -44,7 +44,7 @@ The local SQLite database and `.env` are ignored by Git.
    Use the optional label for your internal batch/reference.
 4. Repeat for each code. Keys are encrypted in the database and duplicate
    keys are rejected across products. Existing entries are immutable.
-5. Customers can register and log in. A purchase delivers exactly one code.
+5. Customers sign in through ZrenAI when academy login is enabled. A purchase delivers exactly one code.
 6. Use **Orders** to see the buyer, product, payment references, delivery
    status, and assigned token. Authorized staff can open the token record
    to view the actual key.
@@ -52,6 +52,47 @@ The local SQLite database and `.env` are ignored by Git.
 Prices and active state are editable. Existing orders keep the original price
 and product name. Deactivating a product prevents new purchases; an existing
 reserved checkout can still be completed.
+
+## Shared academy login
+
+With `ACADEMY_SSO_ENABLED=true`, signed-out visitors see a sign-in page and
+continue through `https://zrenai.aiedu.academy`. The payment site has no public
+marketing landing page and no separate customer registration/password flow.
+Academy users click **购买 Token** from the homepage or workspace. An existing
+academy session continues without asking for a password again.
+
+The academy owns Supabase authentication and its account allowlist. This integration
+does not grant new academy roles or open public academy registration. An academy
+administrator is still a normal customer in the payment portal. Payment staff
+continue using the separate Django `/admin/` login.
+
+The browser handoff uses a random state bound to the payment session and an S256
+PKCE challenge. The academy issues a hashed, one-use authorization code that expires
+after 60 seconds. The payment backend redeems it over HTTPS using a separate
+HMAC-authenticated service channel. No passwords, Supabase tokens, roles, or signing
+secrets travel in the redirect URL. Customer records bind to the verified Supabase
+UUID, never by matching email to an existing account.
+
+The payment portal revalidates the source session on each customer request.
+Academy logout, expiry, or account disabling therefore denies further payment
+access. Authentication outages fail closed; signed Curlec callbacks continue to
+confirm paid orders independently. Payment logout ends the local payment session.
+
+Deployment order:
+
+1. Create the academy's private `zrenai_course.payment_login_codes` table through
+   an administrative database migration (the runtime role cannot create tables).
+   Enable RLS, revoke access from PUBLIC, anon, and authenticated, and grant only
+   the `zrenai_course_app` backend role SELECT/INSERT/UPDATE/DELETE with its scoped
+   `app_backend` policy. Do not expose this schema through the Data API.
+   `payment_sso.install(store)` is for the local SQLite test database only.
+2. Set the same random `PAYMENT_SSO_SECRET` on both Vercel projects, and set
+   `PAYMENT_ORIGIN=https://zrenai.naviwealth.net` on the academy. Deploy its
+   `/payments/authorize` page and `/api/payment-sso/*` endpoints.
+3. Run the payment Django migrations. Set `ACADEMY_ORIGIN` and enable
+   `ACADEMY_SSO_ENABLED=true`, then deploy the payment site.
+4. Test with an existing approved academy account, including sign-out and reuse
+   of a consumed handoff code. Keep service secrets out of Git and browser code.
 
 ## Connect Curlec test payments
 
@@ -197,6 +238,9 @@ Before deploying, configure these **Production** environment variables in the
 | `CURLEC_KEY_ID` | Curlec Test Mode key ID until live acceptance testing is complete |
 | `CURLEC_KEY_SECRET` | Matching Curlec API secret |
 | `CURLEC_WEBHOOK_SECRET` | The exact secret configured on the Curlec webhook |
+| `ACADEMY_SSO_ENABLED` | `true` after the academy handoff is deployed |
+| `ACADEMY_ORIGIN` | `https://zrenai.aiedu.academy` |
+| `PAYMENT_SSO_SECRET` | Independent random service signing secret shared only by the two backends |
 
 Do not generate new encryption/session keys on every build. Add secrets through
 Vercel's environment settings or CLI stdin; never commit the local `.env`.

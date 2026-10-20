@@ -8,6 +8,12 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 
+class AcademyIdentity(models.Model):
+    """Immutable Supabase identity binding, independent of email and staff roles."""
+    subject = models.UUIDField(unique=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="academy_identity")
+
+
 class Product(models.Model):
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)

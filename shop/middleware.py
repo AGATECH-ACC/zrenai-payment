@@ -7,4 +7,6 @@ class PrivateResponseMiddleware:
         response["Cache-Control"] = "no-store, private"
         response["Pragma"] = "no-cache"
         response["X-Content-Type-Options"] = "nosniff"
+        if request.path.startswith("/accounts/sso/"):
+            response["Referrer-Policy"] = "no-referrer"
         return response

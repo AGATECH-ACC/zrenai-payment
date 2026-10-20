@@ -15,8 +15,9 @@
         {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">Log out</button></form>
       {% else %}
-        <a href="{% url 'login' %}">Log in</a><a class="button small" href="{% url 'signup' %}">Create account <span aria-hidden="true">↗</span></a>
+        {% if not request.academy_sso_enabled %}<a href="{% url 'login' %}">Log in</a><a class="button small" href="{% url 'signup' %}">Create account <span aria-hidden="true">↗</span></a>{% endif %}
       {% endif %}
+      {% if request.academy_sso_enabled %}<a href="{{ request.academy_origin }}">Return to ZrenAI ↗</a>{% endif %}
     </nav>
   </header>
   <main>

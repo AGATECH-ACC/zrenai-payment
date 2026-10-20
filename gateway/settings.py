@@ -46,6 +46,15 @@ if ON_VERCEL:
 CURLEC_KEY_ID = os.getenv("CURLEC_KEY_ID", "")
 CURLEC_KEY_SECRET = os.getenv("CURLEC_KEY_SECRET", "")
 CURLEC_WEBHOOK_SECRET = os.getenv("CURLEC_WEBHOOK_SECRET", "")
+ACADEMY_SSO_ENABLED = os.getenv("ACADEMY_SSO_ENABLED", "false").lower() == "true"
+ACADEMY_ORIGIN = os.getenv("ACADEMY_ORIGIN", "https://zrenai.aiedu.academy").rstrip("/")
+PAYMENT_SSO_SECRET = os.getenv("PAYMENT_SSO_SECRET", "")
+if ACADEMY_SSO_ENABLED:
+    academy_url = urlparse(ACADEMY_ORIGIN)
+    if (academy_url.scheme != "https" or not academy_url.hostname or
+            academy_url.path or academy_url.query or academy_url.fragment or
+            academy_url.username or academy_url.password or len(PAYMENT_SSO_SECRET) < 32):
+        raise ImproperlyConfigured("Configure a trusted HTTPS ACADEMY_ORIGIN and PAYMENT_SSO_SECRET.")
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
@@ -62,6 +71,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",
     "shop.middleware.PrivateResponseMiddleware",
+    "shop.sso.AcademySessionMiddleware",
 ]
 ROOT_URLCONF = "gateway.urls"
 TEMPLATES = [{

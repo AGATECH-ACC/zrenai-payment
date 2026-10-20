@@ -30,6 +30,8 @@ def api_login_required(view):
 @sensitive_post_parameters("password1", "password2")
 @require_http_methods(["GET", "POST"])
 def signup(request):
+    if settings.ACADEMY_SSO_ENABLED:
+        return redirect("login")
     form = SignupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -38,6 +40,7 @@ def signup(request):
     return render(request, "registration/signup.html", {"form": form})
 
 
+@login_required
 @require_GET
 def store(request):
     products = Product.objects.filter(active=True).annotate(

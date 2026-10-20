@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Sign-in needs another try · ZrenAI{% endblock %}
+{% block content %}
+<section class="auth-card"><p class="eyebrow">ZRENAI ACCOUNT</p>
+<h1>Let’s try that again.</h1>
+<p class="muted">Your sign-in link may have expired or your academy session is no longer available. Return to sign-in to continue.</p>
+<a class="button full" href="{% url 'login' %}">Return to sign in →</a></section>
+{% endblock %}

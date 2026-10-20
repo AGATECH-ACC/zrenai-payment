@@ -51,6 +51,7 @@ with tempfile.TemporaryDirectory(prefix="zrenai-pg-") as directory:
             "DJANGO_SECRET_KEY": "disposable-postgres-test-secret",
             "TOKEN_ENCRYPTION_KEY": Fernet.generate_key().decode(),
             "DATABASE_SCHEMA": "zrenai_payment",
+            "ACADEMY_SSO_ENABLED": "false",
         })
         result = subprocess.run(
             [sys.executable, "manage.py", "test", "shop", "--noinput", "--verbosity=1"],

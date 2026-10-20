@@ -1,27 +1,7 @@
 {% extends "base.html" %}{% load static %}
 {% block content %}
-<section class="hero">
-  <div>
-    <p class="eyebrow"><span class="dot"></span> YOUR NEXT IDEA STARTS HERE</p>
-    <h1>More possibilities.<br><em>One token away.</em></h1>
-    <p class="intro">Choose your token, pay securely, and get your unique code. Ready when inspiration strikes.</p>
-    <a class="button" href="#tokens">Explore tokens <span aria-hidden="true">↓</span></a>
-    <p class="fine-print">Your code stays available in your purchase history.</p>
-  </div>
-  <div class="hero-art" aria-hidden="true">
-    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-    <div class="token-card"><div class="card-top">ZREN<span>✦</span></div><div class="card-mark">z</div><div class="card-bottom">A CODE FOR<br>WHAT COMES NEXT <span>↗</span></div></div>
-    <div class="floating-label"><span>✓</span> Yours after payment</div>
-    <span class="art-caption">SMALL TOKEN. BIG POTENTIAL.</span>
-  </div>
-</section>
-<section class="steps" aria-label="How it works">
-  <div><span>01</span><p><strong>Make it yours</strong>Log in and choose a token.</p></div>
-  <div><span>02</span><p><strong>Pay with confidence</strong>Complete your Curlec checkout.</p></div>
-  <div><span>03</span><p><strong>Get your code</strong>Find it in My purchases.</p></div>
-</section>
 <section id="tokens" class="catalog">
-  <div class="section-heading"><div><p class="eyebrow">PICK YOUR NEXT STEP</p><h2>Find your token.</h2></div><span class="muted">One purchase. One unique code.</span></div>
+  <div class="section-heading"><div><p class="eyebrow">ZRENAI TOKENS</p><h2>Choose your token package.</h2></div><span class="muted">One purchase. One unique code.</span></div>
   {% if not payments_ready %}<div class="notice">Checkout is being configured. Token purchases will open when the store is ready.</div>{% endif %}
   <div id="checkout-message" class="notice" role="status" hidden></div>
   {% csrf_token %}
