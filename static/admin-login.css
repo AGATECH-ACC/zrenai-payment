@@ -1,0 +1,46 @@
+.admin-login{background:#f5f7f0;min-height:100vh}
+.admin-header{max-width:1180px;margin:auto;padding:30px 36px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.admin-header .brand-caption{font-size:10px}
+.store-link{font-size:13px;font-weight:500;display:flex;gap:16px;align-items:center}
+.store-link:hover,.admin-customer-link a:hover{text-decoration:underline}
+.admin-layout{max-width:1108px;padding:0;margin:28px auto 48px;display:grid;grid-template-columns:1fr 1fr;border:1px solid #dce3d8;border-radius:22px;overflow:hidden;min-height:0;box-shadow:0 18px 60px #193d2e08}
+.admin-intro{padding:54px 48px 28px;background:#164d3f;color:#f5f8ef;display:flex;flex-direction:column}
+.admin-intro .eyebrow{color:#bed4bc;font-size:10px;letter-spacing:2px;margin-bottom:28px}
+.admin-intro h1{font-size:clamp(36px,4vw,51px);letter-spacing:-2px;line-height:1.15}
+.admin-intro h1 em{color:#d8edac}
+.admin-description{font-size:14px;line-height:1.8;color:#c5d6cd;max-width:310px;margin:22px 0 36px}
+.admin-features{list-style:none;padding:0;margin:0 0 36px}
+.admin-features li{display:flex;gap:18px;align-items:flex-start;padding:20px 0;border-top:1px solid #ffffff24}
+.admin-features li>span{font-size:11px;color:#c6dba5;padding-top:2px}
+.admin-features h2{font-size:16px;letter-spacing:-.3px;line-height:1.4;font-weight:600}
+.admin-features p{font-size:12px;color:#c5d6cd;margin:6px 0 0}
+.admin-intro-footer{margin-top:auto;display:flex;align-items:center;gap:9px;font-size:11px;color:#c5d6cd}
+.admin-intro-footer>span:last-child{margin-left:auto;color:#d8edac;font-size:37px;line-height:1}
+.admin-status-dot{width:6px;height:6px;background:#d8edac;border-radius:50%}
+.admin-form-panel{padding:42px 48px 32px;background:#fff}
+.admin-form-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}
+.admin-lock{width:44px;height:44px;border-radius:12px;background:#f0f5e9;color:#176b56;display:grid;place-items:center}
+.admin-access-label{font-size:9px;letter-spacing:1.6px;font-weight:700;color:#68756e}
+.admin-form-panel h2{font-size:30px;line-height:1.2;letter-spacing:-1px}
+.admin-form-description{font-size:13px;color:#68756e;margin:13px 0 24px}
+.admin-account-notice{background:#f1f5eb;border:1px solid #dce6d0;border-radius:9px;padding:14px 16px;margin:0 0 24px;font-size:12px;line-height:1.6}
+.admin-account-notice strong{font-weight:600}
+.admin-account-notice p{margin:5px 0 0;color:#53645a}
+.admin-field{margin:0 0 19px}
+.admin-field label{display:block;font-size:12px;font-weight:600;margin-bottom:8px}
+.admin-field input{background:#fff;padding:13px 14px;min-height:48px}
+.admin-field input[aria-invalid=true]{border-color:#aa392b}
+.admin-submit{margin-top:3px;justify-content:space-between;padding:15px 18px;min-height:49px}
+.admin-login-help{font-size:11px;line-height:1.8;color:#68756e;margin:20px 0 24px}
+.admin-login-help:first-line{color:#344e41}
+.admin-customer-link{border-top:1px solid #e1e7dc;padding-top:19px;display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#68756e}
+.admin-customer-link a{font-weight:600;color:#176b56}
+.admin-errors{border:1px solid #edc4ba;border-radius:8px;padding:12px 15px;background:#fff3ef;color:#9e3022;font-size:12px;margin-bottom:22px}
+.admin-errors .errorlist{padding:0!important;margin:0;background:none}
+.admin-field .errorlist{font-size:12px;margin:8px 0 0}
+.admin-footer{max-width:1108px;padding:20px 0 28px;font-size:10px}
+.skip-link{position:absolute;top:-100px;left:20px;background:#fff;padding:10px 18px;border:2px solid #176b56;z-index:2}
+.skip-link:focus{top:10px}
+@media(max-width:1150px){.admin-layout{margin:20px 30px 36px}.admin-footer{margin:0 30px}.admin-intro,.admin-form-panel{padding:36px 32px}}
+@media(max-width:760px){.admin-header{padding:22px 24px}.admin-header .brand-caption{display:none}.admin-layout{max-width:500px;display:flex;flex-direction:column;margin:14px auto 30px}.admin-intro{padding:30px}.admin-intro h1{font-size:35px;letter-spacing:-1.3px}.admin-intro .eyebrow{margin-bottom:16px;font-size:9px}.admin-description{margin:16px 0 0;max-width:none;font-size:13px}.admin-features,.admin-intro-footer{display:none}.admin-form-panel{padding:30px}.admin-form-panel h2{font-size:28px}.admin-footer{margin:0 24px;padding:18px 0 22px;flex-direction:row;gap:14px}.store-link{font-size:12px;gap:7px}}
+@media(max-width:550px){.admin-layout{margin:8px 16px 24px;border-radius:16px}.admin-header{padding:20px}.admin-intro,.admin-form-panel{padding:26px}.admin-form-heading{margin-bottom:18px}.admin-customer-link{flex-wrap:wrap}.admin-footer{font-size:9px}}
