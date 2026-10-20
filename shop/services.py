@@ -1,0 +1,109 @@
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.utils import timezone
+
+from . import curlec
+from .models import Order, Product, TokenCode
+
+
+class InventoryError(Exception):
+    pass
+
+
+def validate_provider_order(order, remote):
+    if (
+        remote.get("receipt") != str(order.pk)
+        or remote.get("amount") != order.amount
+        or remote.get("currency") != order.currency
+        or not isinstance(remote.get("id"), str)
+        or not remote["id"].startswith("order_")
+        or (order.provider_order_id and order.provider_order_id != remote["id"])
+    ):
+        raise curlec.PaymentError("The provider order does not match this purchase.")
+
+
+def start_checkout(user, product_id):
+    curlec.require_keys()
+    # SQLite BEGIN IMMEDIATE takes the write lock before reading stock.
+    # Network calls stay outside this transaction.
+    with transaction.atomic():
+        product = Product.objects.get(pk=product_id, active=True)
+        existing = Order.objects.filter(user=user, product=product).exclude(status=Order.Status.PAID).first()
+        if existing:
+            if existing.provider_order_id and existing.status == Order.Status.PENDING:
+                return existing
+            raise InventoryError("Your previous checkout is being checked. See My purchases or contact the store.")
+        if Order.objects.filter(user=user).exclude(status=Order.Status.PAID).count() >= 3:
+            raise InventoryError("Please complete your existing purchases before starting another.")
+        token = TokenCode.objects.filter(product=product, order__isnull=True).order_by("pk").first()
+        if token is None:
+            raise InventoryError("This product is sold out.")
+        order = Order.objects.create(
+            user=user, product=product, product_name=product.name,
+            token=token, amount=product.price_sen,
+        )
+    try:
+        remote = curlec.create_order(order)
+        validate_provider_order(order, remote)
+        with transaction.atomic():
+            order = Order.objects.get(pk=order.pk)
+            validate_provider_order(order, remote)
+            order.provider_order_id = remote["id"]
+            # A webhook may have delivered the token before the create response arrived.
+            if order.status != Order.Status.PAID:
+                order.status = Order.Status.PENDING
+            order.save(update_fields=["provider_order_id", "status"])
+        return order
+    except curlec.PaymentError:
+        # Timeouts can mean an order was created remotely. Never recycle its code
+        # or create another payable order until it has been reconciled.
+        Order.objects.filter(pk=order.pk, status=Order.Status.CREATING).update(status=Order.Status.REVIEW)
+        raise
+
+
+def fulfill_payment(payment_id, expected_order=None):
+    payment = curlec.fetch_payment(payment_id)
+    if payment.get("id") != payment_id:
+        raise curlec.PaymentError("The payment reference does not match.")
+    provider_order_id = payment.get("order_id")
+    remote = curlec.fetch_order(provider_order_id)
+    try:
+        order = Order.objects.get(pk=remote.get("receipt"))
+    except (Order.DoesNotExist, ValidationError, ValueError, TypeError):
+        raise curlec.PaymentError("Unknown purchase.")
+    if remote.get("id") != provider_order_id:
+        raise curlec.PaymentError("The provider order reference does not match.")
+    if expected_order and order.pk != expected_order.pk:
+        raise curlec.PaymentError("Payment belongs to a different purchase.")
+    validate_provider_order(order, remote)
+    if (
+        payment.get("amount") != order.amount
+        or payment.get("currency") != order.currency
+        or payment.get("amount_refunded", 0) != 0
+    ):
+        raise curlec.PaymentError("Payment amount or currency does not match the purchase.")
+    if payment.get("status") != "captured" or payment.get("captured") is not True:
+        return order  # Authorization alone must never release a token.
+    with transaction.atomic():
+        order = Order.objects.get(pk=order.pk)
+        validate_provider_order(order, remote)
+        if order.status == Order.Status.PAID:
+            if order.payment_id != payment_id:
+                raise curlec.PaymentError("This purchase already has a different payment.")
+            return order
+        order.provider_order_id = provider_order_id
+        order.payment_id = payment_id
+        order.status = Order.Status.PAID
+        order.paid_at = timezone.now()
+        order.save(update_fields=["provider_order_id", "payment_id", "status", "paid_at"])
+    return order
+
+
+def verify_callback(order, payment_id, signature):
+    if not order.provider_order_id:
+        raise curlec.PaymentError("This order needs reconciliation.")
+    message = f"{order.provider_order_id}|{payment_id}".encode()
+    if not curlec.valid_signature(message, signature, settings.CURLEC_KEY_SECRET):
+        raise curlec.PaymentError("Invalid payment signature.")
+    return fulfill_payment(payment_id, expected_order=order)

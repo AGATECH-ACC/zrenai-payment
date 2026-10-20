@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}My purchases · ZrenAI{% endblock %}
+{% block content %}
+<section class="account-section"><p class="eyebrow">YOUR COLLECTION</p><h1>My purchases.</h1><p class="intro">Your token codes and payment progress, all in one place.</p>
+<div class="purchase-list">
+{% for order in orders %}
+<a class="purchase-row" href="{% url 'purchase' order.pk %}"><div><h3>{{ order.product_name }}</h3><span class="muted">{{ order.created_at|date:"d M Y, H:i" }}</span></div><span class="badge">{{ order.get_status_display }}</span><strong>RM {{ order.price|floatformat:2 }} <span aria-hidden="true">↗</span></strong></a>
+{% empty %}<div class="empty-state"><h3>Your next possibility is waiting.</h3><p>You haven't purchased a token yet.</p><a class="button" href="{% url 'store' %}">Explore tokens →</a></div>{% endfor %}
+</div></section>
+{% endblock %}

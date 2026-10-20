@@ -1,0 +1,29 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ZrenAI · Token store{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'shop.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="{% url 'store' %}"><span class="brand-icon">z</span> zrenai<span class="brand-caption">TOKEN STORE</span></a>
+    <nav aria-label="Main navigation">
+      {% if user.is_authenticated %}
+        <a href="{% url 'purchases' %}">My purchases</a>
+        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">Log out</button></form>
+      {% else %}
+        <a href="{% url 'login' %}">Log in</a><a class="button small" href="{% url 'signup' %}">Create account <span aria-hidden="true">↗</span></a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer><span>© ZrenAI · A little credit. More possibilities.</span><span>Payments via Curlec</span></footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

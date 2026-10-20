@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Create account · ZrenAI{% endblock %}
+{% block content %}
+<section class="auth-card"><p class="eyebrow">YOUR NEXT CHAPTER</p><h1>Start something<br>with ZrenAI.</h1><p class="muted">Create an account to keep your token codes in one place.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="button full" type="submit">Create account →</button></form>
+<p class="auth-footer">Already registered? <a href="{% url 'login' %}">Log in</a></p></section>
+{% endblock %}

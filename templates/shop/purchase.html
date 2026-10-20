@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Your purchase · ZrenAI{% endblock %}
+{% block content %}
+<section class="detail-card" data-status-url="{% url 'order-status' order.pk %}" data-order-status="{{ order.status }}">
+  <a class="back-link" href="{% url 'purchases' %}">← My purchases</a><p class="eyebrow">YOUR PURCHASE</p><h1>{{ order.product_name }}</h1>
+  <div class="purchase-summary"><span>RM {{ order.price|floatformat:2 }}</span><span class="badge" id="order-status">{{ order.get_status_display }}</span></div>
+  <div id="delivery" {% if not token_code %}hidden{% endif %}><h2>Ready for what's next.</h2><p>This is your unique token code. Keep it private and use it with the service this token is for.</p><pre class="code-box" id="token-code">{{ token_code|default:"" }}</pre><button class="button" id="copy-code">Copy token code</button><p id="copy-status" role="status"></p></div>
+  <div id="pending" {% if token_code %}hidden{% endif %}><h2>We'll keep your code safe.</h2><p id="payment-progress">Your code will appear once Curlec confirms payment. If you have paid, please do not pay again.</p>{% if order.status == "pending" %}{% csrf_token %}<button class="button buy-button" data-endpoint="{% url 'resume-checkout' order.pk %}">Resume checkout →</button><div id="checkout-message" class="notice" role="status" hidden></div>{% endif %}</div>
+  <div class="receipt"><span>Purchase reference</span><code>{{ order.pk }}</code><span>{{ order.created_at|date:"d M Y, H:i" }} · Malaysia time</span></div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'purchase.js' %}" defer></script>{% if not token_code %}<script src="{% static 'checkout.js' %}" defer></script>{% endif %}{% endblock %}
