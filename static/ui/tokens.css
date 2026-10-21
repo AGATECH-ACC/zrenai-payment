@@ -1,0 +1,50 @@
+/* ZrenAI / Mono Intelligence. Shared, framework-independent design foundations. */
+@font-face {
+  font-family: Inter;
+  src: url("./vendor/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  color-scheme: light;
+  --zr-bg: #f1f2ef;
+  --zr-surface: #ffffff;
+  --zr-surface-subtle: #f7f8f5;
+  --zr-ink: #111411;
+  --zr-text: #353935;
+  --zr-muted: #646b63;
+  --zr-border: #d9ddd6;
+  --zr-accent: #b9f36b;
+  --zr-accent-hover: #a9e45b;
+  --zr-accent-soft: #eef8e0;
+  --zr-focus: #477520;
+  --zr-success: #315c25;
+  --zr-warning: #765317;
+  --zr-warning-bg: #fff6df;
+  --zr-danger: #a3362c;
+  --zr-danger-bg: #fff0ed;
+  --zr-font: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --zr-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --zr-space-1: 4px;
+  --zr-space-2: 8px;
+  --zr-space-3: 12px;
+  --zr-space-4: 16px;
+  --zr-space-6: 24px;
+  --zr-space-8: 32px;
+  --zr-space-12: 48px;
+  --zr-space-16: 64px;
+  --zr-radius: 4px;
+  --zr-radius-lg: 6px;
+  --zr-control-height: 44px;
+  --zr-duration: 160ms;
+  /* Compatibility tokens for the existing application views. */
+  --paper: var(--zr-bg);
+  --white: var(--zr-surface);
+  --ink: var(--zr-ink);
+  --text: var(--zr-text);
+  --muted: var(--zr-muted);
+  --line: var(--zr-border);
+  --lime: var(--zr-accent);
+  --gold: var(--zr-warning);
+  --red: var(--zr-danger);
+}

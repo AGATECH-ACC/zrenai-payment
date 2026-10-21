@@ -43,6 +43,7 @@ def protect_private_tables(sender, using, **kwargs):
 
 class ShopConfig(AppConfig):
     name = "shop"
+    verbose_name = "额度商店"
     default_auto_field = "django.db.models.BigAutoField"
 
     def ready(self):

@@ -7,9 +7,9 @@ from .forms import TokenCodeForm
 from .models import Order, Product, TokenCode
 
 
-admin.site.site_header = "ZrenAI · Token administration"
-admin.site.site_title = "ZrenAI Admin"
-admin.site.index_title = "Products, token inventory and purchases"
+admin.site.site_header = "众仁 · 额度管理"
+admin.site.site_title = "众仁管理后台"
+admin.site.index_title = "套餐、兑换码库存与订单"
 
 
 @admin.register(Product)
@@ -17,7 +17,11 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "price", "available_codes", "active")
     list_filter = ("active",)
 
-    @admin.display(description="Available codes")
+    @admin.display(description="售价（马币）")
+    def price(self, obj):
+        return obj.price
+
+    @admin.display(description="可用兑换码")
     def available_codes(self, obj):
         return obj.codes.filter(order__isnull=True).count()
 
@@ -40,17 +44,17 @@ class TokenCodeAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         return self.get_fields(request, obj) if obj else ()
 
-    @admin.display(description="Token key (staff only)")
+    @admin.display(description="兑换码（仅管理员可见）")
     def decrypted_token(self, obj):
         return obj.code
 
-    @admin.display(description="Assigned purchase")
+    @admin.display(description="关联订单")
     def assignment(self, obj):
         try:
             order = obj.order
             return f"{order.user.username} · {order.get_status_display()} · {order.pk}"
         except Order.DoesNotExist:
-            return "Available"
+            return "可用"
 
     def has_delete_permission(self, request, obj=None):
         # Never recycle reserved codes. Inventory entries are an audit trail.
@@ -71,8 +75,38 @@ class OrderAdmin(admin.ModelAdmin):
         "status", "provider_order_id", "payment_id", "created_at", "paid_at",
     )
 
+    @admin.display(description="金额（马币）")
+    def price(self, obj):
+        return obj.price
+
     def has_add_permission(self, request):
         return False
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+# Axes has no bundled Chinese catalog or translated labels for computed columns.
+# Retain its handlers, permissions, filters and audit records.
+from axes.admin import AccessAttemptAdmin
+from axes.models import AccessAttempt
+
+
+class ChineseAccessAttemptAdmin(AccessAttemptAdmin):
+    @admin.display(description="锁定状态")
+    def status(self, obj):
+        return super().status(obj)
+
+    @admin.display(description="失效时间")
+    def expiration(self, obj):
+        return super().expiration(obj)
+
+    @admin.action(description="清理过期尝试")
+    def cleanup_expired_attempts(self, request, queryset):
+        count = self.handler.clean_expired_user_attempts(request=request)
+        self.message_user(request, f"已清理 {count} 条过期的登录尝试记录。")
+
+
+if admin.site.is_registered(AccessAttempt):
+    admin.site.unregister(AccessAttempt)
+    admin.site.register(AccessAttempt, ChineseAccessAttemptAdmin)

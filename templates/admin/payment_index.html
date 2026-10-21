@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">商店管理</p><h1>商店概览</h1><p class="muted">套餐、兑换码和购买记录，一目了然。</p></div>{% if perms.shop.add_product %}<a class="zr-button zr-button--accent" href="{% url 'admin:shop_product_add' %}">{% include "ui/icon.html" with name="plus" %}新增套餐</a>{% endif %}</div>
+<section class="metrics-grid" aria-label="商店数据概览">
+  {% if can_view_orders %}{% include "ui/metric.html" with label="已确认收款" value=paid_total note="马币 · 累计已交付订单" %}{% include "ui/metric.html" with label="处理中" value=order_totals.pending note="等待付款或核对支付" %}{% endif %}
+  {% if can_view_codes %}{% include "ui/metric.html" with label="可用兑换码" value=available_codes note="全部套餐中尚未分配的兑换码" %}{% endif %}
+  {% if can_view_products %}{% include "ui/metric.html" with label="已上架套餐" value=active_products note="已在额度商店中展示" %}{% endif %}
+</section>
+<section class="admin-operations-grid">
+  {% if can_view_codes %}<article class="zr-panel inventory-panel"><div class="zr-panel-head"><h2>兑换码库存</h2>{% include "ui/icon.html" with name="key" %}</div><div class="inventory-count"><strong>{{ available_codes }}</strong><span>个兑换码可供分配</span></div><p class="muted">{{ assigned_codes }} 个兑换码已预留或交付。每笔订单对应一个专属兑换码。</p><div class="panel-actions">{% if perms.shop.add_tokencode %}<a class="zr-button zr-button--accent" href="{% url 'admin:shop_tokencode_add' %}">{% include "ui/icon.html" with name="plus" %}添加兑换码</a>{% endif %}<a class="zr-button" href="{% url 'admin:shop_tokencode_changelist' %}">查看库存</a></div></article>{% endif %}
+  {% if can_view_products %}<article class="zr-panel"><div class="zr-panel-head"><h2>您的额度套餐</h2>{% include "ui/icon.html" with name="package" %}</div><div class="inventory-count"><strong>{{ active_products }}<span> / {{ total_products }}</span></strong><span>个套餐已上架</span></div><p class="muted">管理售价、套餐说明和上架状态。已有订单保留原价。</p><a class="zr-button" href="{% url 'admin:shop_product_changelist' %}">管理套餐 {% include "ui/icon.html" with name="arrow-up-right" %}</a></article>{% endif %}
+</section>
+{% if can_view_orders %}
+<section class="zr-panel data-panel" aria-labelledby="recent-title">
+  <div class="zr-panel-head"><h2 id="recent-title">最近订单</h2><a class="zr-button zr-button--ghost zr-button--small" href="{% url 'admin:shop_order_changelist' %}">查看全部 {% include "ui/icon.html" with name="arrow-right" %}</a></div>
+  {% if recent_orders %}{% include "ui/order_table.html" with orders=recent_orders admin_table=True %}
+  {% else %}{% include "ui/empty.html" with title="准备迎接第一笔订单。" description="客户发起购买后，订单和支付状态将在此显示。" icon="shopping-bag" %}{% endif %}
+</section>
+{% endif %}
+{% if not can_view_orders and not can_view_products and not can_view_codes %}{% include "ui/empty.html" with title="您的管理工作台。" description="请通过导航进入您的管理员账号有权访问的功能。" icon="lock" %}{% endif %}
+{% endblock %}

@@ -17,7 +17,7 @@ class ConfigurationError(PaymentError):
 
 def require_keys():
     if not settings.CURLEC_KEY_ID or not settings.CURLEC_KEY_SECRET:
-        raise ConfigurationError("Payments are not configured yet. Please contact the store.")
+        raise ConfigurationError("支付功能尚未配置，请联系店主。")
 
 
 def api(method, path, body=None):
@@ -35,7 +35,7 @@ def api(method, path, body=None):
         return data
     except (httpx.HTTPError, ValueError) as exc:
         # Do not expose provider bodies, credentials, or payment details in errors.
-        raise PaymentError("Curlec could not confirm this request. Please try checking your purchase later.") from exc
+        raise PaymentError("支付平台暂时无法确认此请求，请稍后查看订单状态。") from exc
 
 
 def create_order(order):
@@ -47,13 +47,13 @@ def create_order(order):
 
 def fetch_payment(payment_id):
     if not isinstance(payment_id, str) or not re.fullmatch(r"pay_[A-Za-z0-9]{1,90}", payment_id):
-        raise PaymentError("Invalid payment reference.")
+        raise PaymentError("支付编号无效。")
     return api("GET", f"payments/{payment_id}")
 
 
 def fetch_order(order_id):
     if not isinstance(order_id, str) or not re.fullmatch(r"order_[A-Za-z0-9]{1,90}", order_id):
-        raise PaymentError("Invalid order reference.")
+        raise PaymentError("订单编号无效。")
     return api("GET", f"orders/{order_id}")
 
 

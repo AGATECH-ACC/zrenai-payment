@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Sign in · ZrenAI tokens{% endblock %}
+{% block title %}登录 · 众仁额度{% endblock %}
 {% block content %}
-<section class="auth-card"><p class="eyebrow">ZRENAI TOKENS</p><h1>One account.<br>Ready to continue.</h1>
-<p class="muted">Use your ZrenAI account to buy token codes and view your purchases. If you’re already signed in to ZrenAI, you’ll continue without entering your password again.</p>
-<a class="button full" href="{% url 'sso-start' %}?next={{ next|urlencode }}">Continue with ZrenAI →</a>
-<p class="auth-footer">Use the account you sign in with at zrenai.aiedu.academy.</p></section>
+<section class="auth-home"><div><p class="eyebrow">众仁 / 额度商店</p><h1>一个账号，<br>开启更多可能。</h1>
+<p class="hero-description">登录后即可选购额度套餐，统一查看和管理已购买的兑换码。</p>
+<a class="zr-button zr-button--primary" href="{% url 'sso-start' %}?next={{ next|urlencode }}">使用众仁账号继续 {% include "ui/icon.html" with name="arrow-right" %}</a>
+<p class="auth-footer">已登录众仁学院？点击继续，无需再次输入密码。</p></div>
+<div class="hero-footnote"><span>您的账号。<br>更多可能。</span><span>额度 / 工具 / 创意</span></div></section>
 {% endblock %}

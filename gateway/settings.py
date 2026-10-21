@@ -56,7 +56,7 @@ if ACADEMY_SSO_ENABLED:
             academy_url.username or academy_url.password or len(PAYMENT_SSO_SECRET) < 32):
         raise ImproperlyConfigured("Configure a trusted HTTPS ACADEMY_ORIGIN and PAYMENT_SSO_SECRET.")
 INSTALLED_APPS = [
-    "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
+    "shop.admin_site.PaymentAdminConfig", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
     "axes", "shop",
 ]
@@ -125,9 +125,10 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
 AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
 AXES_RESET_ON_SUCCESS = True
-LANGUAGE_CODE = "en"
+LANGUAGE_CODE = "zh-hans"
 TIME_ZONE = "Asia/Kuala_Lumpur"
 USE_I18N = True
+LOCALE_PATHS = [BASE_DIR / "locale"]
 USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

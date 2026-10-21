@@ -1,0 +1,5 @@
+<div class="zr-empty">
+  {% include "ui/icon.html" with name=icon|default:"inbox" %}
+  <h3>{{ title }}</h3><p>{{ description }}</p>
+  {% if href %}{% include "ui/button.html" with label=action variant="primary" %}{% endif %}
+</div>

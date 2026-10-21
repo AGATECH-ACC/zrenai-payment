@@ -1,0 +1,8 @@
+<div class="zr-table-wrap" tabindex="0" role="region" aria-label="购买记录表格">
+<table class="zr-table"><caption class="zr-sr-only">购买记录、支付状态及详情链接</caption>
+  <thead><tr><th scope="col">套餐 / 订单编号</th><th scope="col">日期</th><th scope="col">金额</th><th scope="col">状态</th><th scope="col"><span class="zr-sr-only">详情</span></th></tr></thead>
+  <tbody>{% for order in orders %}
+    {% if admin_table %}{% url 'admin:shop_order_change' order.pk as detail_url %}{% else %}{% url 'purchase' order.pk as detail_url %}{% endif %}
+    <tr><td><a class="table-title" href="{{ detail_url }}">{{ order.product_name }}</a><small class="reference">{{ order.pk }}</small></td><td class="zr-number">{{ order.created_at|date:"Y-m-d" }}<small>{{ order.created_at|date:"H:i" }}</small></td><td class="zr-number">马币 {{ order.price|floatformat:2 }}</td><td>{% include "ui/status.html" %}</td><td><a class="zr-button zr-button--ghost zr-button--small" href="{{ detail_url }}" aria-label="查看{{ order.product_name }}的订单">{% include "ui/icon.html" with name="arrow-up-right" %}</a></td></tr>
+  {% endfor %}</tbody>
+</table></div>

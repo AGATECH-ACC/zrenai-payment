@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}{% load static %}
+{% block title %}{{ title }} · 众仁支付管理{% endblock %}
+{% block dark-mode-vars %}{% endblock %}
+{% block responsive %}{{ block.super }}{% include "ui/assets.html" %}<link rel="stylesheet" href="{% static 'admin.css' %}">{% endblock %}
+{% block bodyclass %}{{ block.super }} mono-admin{% endblock %}
+{% block header %}
+<header class="workspace-topbar"><span>{% include "ui/icon.html" with name="grid" %} 支付管理 <span class="crumb-divider">/</span> {{ title }}</span><div class="topbar-actions"><a class="zr-button zr-button--ghost zr-button--small" href="{% url 'store' %}">查看商店 {% include "ui/icon.html" with name="arrow-up-right" %}</a>{% if user.has_usable_password %}<a class="zr-button zr-button--ghost zr-button--small" href="{% url 'admin:password_change' %}" aria-label="修改密码">{% include "ui/icon.html" with name="lock" %}<span class="desktop-label">密码</span></a>{% endif %}<form method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button class="zr-button--ghost zr-button--small" aria-label="退出登录">{% include "ui/icon.html" with name="log-out" %}<span class="desktop-label">退出登录</span></button></form></div></header>
+{% endblock %}
+{% block nav-sidebar %}
+<aside class="workspace-nav">
+  {% include "ui/brand.html" with caption="支付管理" %}
+  <p class="nav-eyebrow">商店管理</p>
+  <nav aria-label="管理导航">
+    {% url 'admin:index' as overview_url %}<a href="{{ overview_url }}" {% if request.path == overview_url %}aria-current="page"{% endif %}>{% include "ui/icon.html" with name="grid" %}概览</a>
+    {% for app in available_apps %}{% for model in app.models %}{% if model.admin_url %}<a href="{{ model.admin_url }}" {% if model.admin_url in request.path %}aria-current="page"{% endif %}>{% include "ui/model_icon.html" %}{{ model.name }}</a>{% endif %}{% endfor %}{% endfor %}
+  </nav>
+  <div class="nav-bottom"><span class="zr-badge">管理工作台</span><p>套餐、库存与订单。<br>马来西亚时间 · 马币</p></div>
+</aside>
+{% endblock %}
+{% block footer %}<span>© 众仁 / 支付管理</span>{% endblock %}

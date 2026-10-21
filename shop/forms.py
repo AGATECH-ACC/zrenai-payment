@@ -6,7 +6,7 @@ from .models import TokenCode
 
 
 class SignupForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(label="邮箱", required=True)
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -15,9 +15,9 @@ class SignupForm(UserCreationForm):
 
 class TokenCodeForm(forms.ModelForm):
     token_key = forms.CharField(
-        label="Token key", max_length=4096,
+        label="兑换码", max_length=4096,
         widget=forms.PasswordInput(render_value=False),
-        help_text="Paste one unique code. It is encrypted before storage.",
+        help_text="请粘贴一个唯一的兑换码，系统会加密保存。",
     )
 
     class Meta:
@@ -28,7 +28,7 @@ class TokenCodeForm(forms.ModelForm):
         value = self.cleaned_data["token_key"].strip()
         fingerprint = hashlib.sha256(value.encode()).hexdigest()
         if TokenCode.objects.filter(fingerprint=fingerprint).exists():
-            raise forms.ValidationError("This token code is already in inventory.")
+            raise forms.ValidationError("此兑换码已存在于库存中。")
         return value
 
     def save(self, commit=True):

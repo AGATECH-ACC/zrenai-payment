@@ -34,7 +34,7 @@ class AcademySSOTests(TestCase):
     def test_signed_out_entry_is_login_and_local_signup_disabled(self):
         self.assertEqual(self.client.get("/")["Location"], "/accounts/login/?next=/")
         page = self.client.get("/accounts/login/")
-        self.assertContains(page, "Continue with ZrenAI")
+        self.assertContains(page, "使用众仁账号继续")
         self.assertNotContains(page, 'type="password"')
         self.assertEqual(self.client.post("/accounts/signup/", {"username": "intruder"}).status_code, 302)
         self.assertEqual(User.objects.count(), 0)
@@ -57,7 +57,7 @@ class AcademySSOTests(TestCase):
         self.assertEqual(self.client.get("/purchases/").status_code, 200)
         self.assertEqual(self.client.get("/admin/").status_code, 302)
         self.assertEqual(self.client.get("/").status_code, 200)
-        self.assertContains(self.client.get("/"), "Choose your token package.")
+        self.assertContains(self.client.get("/"), "选择您的额度套餐。")
 
     @patch("shop.sso.academy_request")
     def test_wrong_expired_or_replayed_browser_state_never_exchanges(self, remote):

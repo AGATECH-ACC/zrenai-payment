@@ -1,32 +1,42 @@
 {% extends "base.html" %}{% load static %}
 {% block content %}
-<section id="tokens" class="catalog">
-  <div class="section-heading"><div><p class="eyebrow">ZRENAI TOKENS</p><h2>Choose your token package.</h2></div><span class="muted">One purchase. One unique code.</span></div>
-  {% if not payments_ready %}<div class="notice">Checkout is being configured. Token purchases will open when the store is ready.</div>{% endif %}
-  <div id="checkout-message" class="notice" role="status" hidden></div>
+<section class="store-hero">
+  <div class="hero-copy"><p class="eyebrow">众仁 / 额度商店</p><h1>让想法，<br>拥有更多可能。</h1><p class="hero-description">选择额度套餐，安全完成支付，随时查看您的专属兑换码。</p><div class="hero-actions"><a class="zr-button zr-button--primary" href="#tokens">浏览套餐 {% include "ui/icon.html" with name="arrow-right" %}</a><button class="zr-button--secondary" type="button" data-open-dialog="store-help">购买指南</button></div></div>
+  <div class="hero-footnote"><span>一个账号。<br>更多可能。</span><span>选择 / 支付 / 创作</span></div>
+</section>
+<section class="catalog" id="tokens" aria-labelledby="catalog-title">
+  <div class="page-heading"><div><p class="eyebrow">额度套餐</p><h2 id="catalog-title">选择您的额度套餐。</h2></div><p class="muted">单次购买，一个专属兑换码。</p></div>
+  {% if not payments_ready %}<div class="zr-alert app-message">支付功能正在配置，完成后即可购买额度套餐。</div>{% endif %}
+  <div id="checkout-message" class="zr-alert app-message" role="status" hidden></div>
   {% csrf_token %}
   <div class="product-grid">
   {% for product in products %}
-    <article class="product-card">
-      <div class="product-top"><span class="product-symbol">✳</span><span class="badge">{% if product.available %}Available{% else %}Sold out{% endif %}</span></div>
+    <article class="product-card zr-panel">
+      <div class="product-top">{% include "ui/icon.html" with name="cpu" %}<span class="zr-badge {% if not product.available %}zr-badge--neutral{% endif %}">{% if product.available %}有库存{% else %}已售罄{% endif %}</span></div>
       <h3>{{ product.name }}</h3><p class="description">{{ product.description|linebreaksbr }}</p>
-      <p class="price"><span>RM</span> {{ product.price|floatformat:2 }}</p><p class="muted">One-time purchase · 1 token code</p>
+      <p class="price"><span>马币</span> {{ product.price|floatformat:2 }}</p><p class="zr-help">单次购买 · 一个兑换码</p>
       {% if not product.available %}
-        <button class="button full" disabled>Sold out</button>
+        <button class="zr-button--primary full" disabled>已售罄</button>
       {% elif not payments_ready %}
-        <button class="button full" disabled>Coming soon</button>
-      {% elif user.is_authenticated %}
-        <button class="button full buy-button" data-product="{{ product.pk }}">Buy token <span aria-hidden="true">↗</span></button>
+        <button class="zr-button--primary full" disabled>即将开放</button>
       {% else %}
-        <a class="button full" href="{% url 'login' %}?next=/">Log in to buy <span aria-hidden="true">↗</span></a>
+        <button class="zr-button--primary full buy-button" data-product="{{ product.pk }}" aria-label="购买 {{ product.name }}">购买额度 {% include "ui/icon.html" with name="arrow-up-right" %}</button>
       {% endif %}
-      <p class="card-note">Delivered after payment confirmation</p>
+      <p class="card-note">支付确认后交付兑换码</p>
     </article>
   {% empty %}
-    <div class="empty-state"><span class="product-symbol">✳</span><h3>Good things are on the way.</h3><p>Token packages will appear here when the store opens.</p>{% if user.is_staff %}<a href="{% url 'admin:shop_product_add' %}">Add your first product →</a>{% endif %}</div>
+    <div class="zr-panel catalog-empty">
+      {% url 'admin:shop_product_add' as add_product %}
+      {% if perms.shop.add_product %}{% include "ui/empty.html" with title="从第一个套餐开始。" description="创建套餐并添加兑换码库存，即可供客户购买。" icon="package" href=add_product action="添加额度套餐" %}{% else %}{% include "ui/empty.html" with title="新套餐即将上架。" description="目前暂无已上架的额度套餐。请稍后再来，或查看已有购买记录。" icon="package" %}{% endif %}
+    </div>
   {% endfor %}
   </div>
 </section>
-<section class="help-strip"><div class="help-symbol">↗</div><div><h3>Your code, kept close.</h3><p>No searching through messages. Every confirmed token code is saved in your account.</p></div><a href="{% url 'purchases' %}">My purchases →</a></section>
+<section class="store-paths" aria-label="您的额度商店">
+  <a class="zr-panel path-card" href="{% url 'purchases' %}"><div>{% include "ui/icon.html" with name="shopping-bag" %}{% include "ui/icon.html" with name="arrow-up-right" %}</div><h3>我的购买记录</h3><p>支付进度与已交付的兑换码，一处查看。</p></a>
+  <button class="zr-panel path-card" type="button" data-open-dialog="store-help"><div>{% include "ui/icon.html" with name="key" %}{% include "ui/icon.html" with name="arrow-up-right" %}</div><h3>兑换码，随时可查。</h3><p>了解支付完成后如何获取和使用兑换码。</p></button>
+  {% if request.academy_sso_enabled %}<a class="zr-panel path-card" href="{{ request.academy_origin }}"><div>{% include "ui/icon.html" with name="book-open" %}{% include "ui/icon.html" with name="arrow-up-right" %}</div><h3>众仁学院</h3><p>使用同一账号，返回学院继续学习。</p></a>{% endif %}
+</section>
+{% include "ui/dialog.html" %}
 {% endblock %}
 {% block scripts %}<script src="{% static 'checkout.js' %}" defer></script>{% endblock %}

@@ -1,10 +1,17 @@
-{% extends "base.html" %}
-{% block title %}My purchases · ZrenAI{% endblock %}
+{% extends "dashboard_base.html" %}
+{% block title %}我的购买记录 · 众仁{% endblock %}
 {% block content %}
-<section class="account-section"><p class="eyebrow">YOUR COLLECTION</p><h1>My purchases.</h1><p class="intro">Your token codes and payment progress, all in one place.</p>
-<div class="purchase-list">
-{% for order in orders %}
-<a class="purchase-row" href="{% url 'purchase' order.pk %}"><div><h3>{{ order.product_name }}</h3><span class="muted">{{ order.created_at|date:"d M Y, H:i" }}</span></div><span class="badge">{{ order.get_status_display }}</span><strong>RM {{ order.price|floatformat:2 }} <span aria-hidden="true">↗</span></strong></a>
-{% empty %}<div class="empty-state"><h3>Your next possibility is waiting.</h3><p>You haven't purchased a token yet.</p><a class="button" href="{% url 'store' %}">Explore tokens →</a></div>{% endfor %}
-</div></section>
+<div class="page-heading"><div><p class="eyebrow">我的收藏</p><h1>我的购买记录</h1><p class="muted">统一查看您的兑换码和支付进度。</p></div><a class="zr-button zr-button--accent" href="{% url 'store' %}">{% include "ui/icon.html" with name="plus" %}购买额度</a></div>
+<section class="metrics-grid" aria-label="购买数据概览">
+  {% include "ui/metric.html" with label="订单总数" value=summary.total note="全部购买记录" %}
+  {% include "ui/metric.html" with label="已交付兑换码" value=summary.delivered note="支付已确认" %}
+  {% include "ui/metric.html" with label="处理中" value=summary.pending note="等待付款或支付确认" %}
+  {% include "ui/metric.html" with label="累计已支付" value=paid_total note="马币 · 仅统计已确认订单" %}
+</section>
+<section class="zr-panel data-panel" aria-labelledby="history-title">
+  <div class="zr-panel-head"><h2 id="history-title">购买记录</h2><nav class="zr-segmented" aria-label="筛选订单"><a href="{% url 'purchases' %}" {% if purchase_filter == 'all' %}aria-current="page"{% endif %}>全部</a><a href="?status=pending" {% if purchase_filter == 'pending' %}aria-current="page"{% endif %}>处理中</a><a href="?status=paid" {% if purchase_filter == 'paid' %}aria-current="page"{% endif %}>已交付</a></nav></div>
+  {% if orders %}{% include "ui/order_table.html" with admin_table=False %}
+  {% else %}{% url 'store' as store_url %}{% include "ui/empty.html" with title="这里还没有订单。" description="购买后可在这里查看支付状态，并在订单详情中获取已交付的兑换码。" href=store_url action="浏览额度套餐" icon="shopping-bag" %}{% endif %}
+</section>
+<div class="zr-alert zr-alert--info app-message">{% include "ui/icon.html" with name="info" %}<span>已经付款？请打开订单查看确认状态。核对期间请勿重复付款。</span></div>
 {% endblock %}

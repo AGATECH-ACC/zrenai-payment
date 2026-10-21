@@ -1,10 +1,11 @@
 import json
+from decimal import Decimal
 from functools import wraps
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -22,7 +23,7 @@ def api_login_required(view):
     @wraps(view)
     def wrapped(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return JsonResponse({"error": "Please log in to continue."}, status=401)
+            return JsonResponse({"error": "请先登录后继续。"}, status=401)
         return view(request, *args, **kwargs)
     return wrapped
 
@@ -35,7 +36,7 @@ def signup(request):
     form = SignupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, "Account created. Log in to buy your first token code.")
+        messages.success(request, "账号已创建，请登录后购买额度套餐。")
         return redirect("login")
     return render(request, "registration/signup.html", {"form": form})
 
@@ -55,7 +56,23 @@ def store(request):
 @login_required
 @require_GET
 def purchases(request):
-    return render(request, "shop/purchases.html", {"orders": Order.objects.filter(user=request.user)})
+    orders = Order.objects.filter(user=request.user)
+    summary = orders.aggregate(
+        total=Count("pk"), delivered=Count("pk", filter=Q(status=Order.Status.PAID)),
+        pending=Count("pk", filter=~Q(status=Order.Status.PAID)),
+        paid_sen=Sum("amount", filter=Q(status=Order.Status.PAID)),
+    )
+    selected = request.GET.get("status", "all")
+    if selected == "paid":
+        orders = orders.filter(status=Order.Status.PAID)
+    elif selected == "pending":
+        orders = orders.exclude(status=Order.Status.PAID)
+    else:
+        selected = "all"
+    return render(request, "shop/purchases.html", {
+        "orders": orders, "summary": summary, "purchase_filter": selected,
+        "paid_total": f"马币 {Decimal(summary['paid_sen'] or 0) / 100:,.2f}",
+    })
 
 
 @login_required
@@ -75,11 +92,11 @@ def checkout(request):
         if not isinstance(payload, dict) or type(payload.get("product_id")) is not int:
             raise ValueError
     except (ValueError, UnicodeDecodeError):
-        return JsonResponse({"error": "A valid product_id is required."}, status=400)
+        return JsonResponse({"error": "请选择有效的套餐。"}, status=400)
     try:
         order = start_checkout(request.user, payload["product_id"])
     except Product.DoesNotExist:
-        return JsonResponse({"error": "Product not found."}, status=404)
+        return JsonResponse({"error": "找不到该套餐。"}, status=404)
     except InventoryError as exc:
         return JsonResponse({"error": str(exc)}, status=409)
     except curlec.PaymentError as exc:
@@ -95,12 +112,12 @@ def checkout_response(order, user):
         "purchase_url": reverse("purchase", args=[order.pk]),
         "checkout": {
             "key": settings.CURLEC_KEY_ID, "order_id": order.provider_order_id,
-            "amount": order.amount, "currency": order.currency, "name": "ZrenAI",
+            "amount": order.amount, "currency": order.currency, "name": "众仁",
             "description": order.product_name,
             "callback_url": settings.APP_BASE_URL + reverse("callback", args=[order.pk]),
             "redirect": True,
             "prefill": {"email": user.email},
-            "theme": {"color": "#176b56"},
+            "theme": {"color": "#111411"},
         },
     })
 
@@ -116,7 +133,7 @@ def resume_checkout(request, order_id):
     except curlec.ConfigurationError as exc:
         return JsonResponse({"error": str(exc)}, status=503)
     if order.status != Order.Status.PENDING or not order.provider_order_id:
-        return JsonResponse({"error": "This purchase needs a payment check. Please contact the store."}, status=409)
+        return JsonResponse({"error": "此订单需要核对支付，请联系店主。"}, status=409)
     return checkout_response(order, request.user)
 
 
@@ -143,8 +160,8 @@ def callback(request, order_id):
         )
     except curlec.PaymentError:
         return HttpResponse(
-            "Payment could not yet be verified. Open My purchases after logging in. "
-            "Do not pay again; the store can check the payment reference.",
+            "暂时无法确认支付，请登录后打开购买记录。"
+            "请勿重复付款，店主可根据支付编号进行核对。",
             status=400, content_type="text/plain",
         )
     return redirect("purchase", order_id=order.pk)
@@ -154,13 +171,13 @@ def callback(request, order_id):
 @require_POST
 def webhook(request):
     if not settings.CURLEC_WEBHOOK_SECRET:
-        return JsonResponse({"error": "Webhook is not configured."}, status=503)
+        return JsonResponse({"error": "支付通知尚未配置。"}, status=503)
     raw_body = request.body
     if not curlec.valid_signature(
         raw_body, request.headers.get("X-Razorpay-Signature", ""),
         settings.CURLEC_WEBHOOK_SECRET,
     ):
-        return JsonResponse({"error": "Invalid signature."}, status=400)
+        return JsonResponse({"error": "签名无效。"}, status=400)
     try:
         event = json.loads(raw_body)
         if not isinstance(event, dict):
@@ -171,11 +188,11 @@ def webhook(request):
         if not isinstance(payment_id, str):
             raise ValueError
     except (ValueError, KeyError, TypeError, UnicodeDecodeError):
-        return JsonResponse({"error": "Invalid event payload."}, status=400)
+        return JsonResponse({"error": "通知内容无效。"}, status=400)
     try:
         # Fetch authoritative state; payloads can be stale or arrive out of order.
         # The unique payment and token constraints make callback/webhook retries idempotent.
         fulfill_payment(payment_id)
     except curlec.PaymentError:
-        return JsonResponse({"error": "Payment reconciliation pending."}, status=503)
+        return JsonResponse({"error": "支付正在核对中。"}, status=503)
     return JsonResponse({"received": True})

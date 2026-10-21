@@ -1,0 +1,1 @@
+<span class="zr-badge {% if order.status == 'paid' %}zr-badge--success{% elif order.status == 'review' %}zr-badge--danger{% else %}zr-badge--warning{% endif %}">{{ order.get_status_display }}</span>

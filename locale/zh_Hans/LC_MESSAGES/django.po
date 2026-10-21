@@ -1,0 +1,102 @@
+# Chinese translations for the payment application’s third-party admin labels.
+msgid ""
+msgstr ""
+"Language: zh_Hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Form Data"
+msgstr "表单数据"
+
+msgid "Meta Data"
+msgstr "请求信息"
+
+msgid "Account locked: too many login attempts. Please try again later."
+msgstr "登录尝试过多，账号已暂时锁定，请稍后重试。"
+
+msgid "Account locked: too many login attempts. Contact an admin to unlock your account."
+msgstr "登录尝试过多，账号已锁定，请联系管理员解锁。"
+
+msgid "User Agent"
+msgstr "浏览器信息"
+
+msgid "IP Address"
+msgstr "网络地址"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "HTTP Accept"
+msgstr "可接受的响应类型"
+
+msgid "Path"
+msgstr "访问路径"
+
+msgid "Attempt Time"
+msgstr "尝试时间"
+
+msgid "Access lock out"
+msgstr "已锁定"
+
+msgid "access failure"
+msgstr "登录失败记录"
+
+msgid "access failures"
+msgstr "登录失败记录"
+
+msgid "GET Data"
+msgstr "查询参数"
+
+msgid "POST Data"
+msgstr "提交数据"
+
+msgid "Failed Logins"
+msgstr "失败次数"
+
+msgid "access attempt"
+msgstr "登录尝试"
+
+msgid "access attempts"
+msgstr "登录尝试"
+
+msgid "Logout Time"
+msgstr "退出时间"
+
+msgid "access log"
+msgstr "访问日志"
+
+msgid "access logs"
+msgstr "访问日志"
+
+msgid "Locked Out"
+msgstr "已锁定"
+
+msgid "Attempt Remaining"
+msgstr "次剩余尝试"
+
+msgid "Not set"
+msgstr "未设置"
+
+msgid "Clean up expired attempts"
+msgstr "清理过期尝试"
+
+msgid "Access Attempt"
+msgstr "登录尝试"
+
+msgid "Expires At"
+msgstr "失效时间"
+
+msgid "The time when access attempt expires and is no longer valid."
+msgstr "此次登录尝试记录的失效时间。"
+
+msgid "access attempt expiration"
+msgstr "登录尝试有效期"
+
+msgid "access attempt expirations"
+msgstr "登录尝试有效期"
+
+msgid "Session key hash (sha256)"
+msgstr "会话密钥摘要"
+
+msgid "Error:"
+msgstr "错误："

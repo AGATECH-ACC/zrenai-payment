@@ -1,30 +1,37 @@
 {% load static %}
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hans">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}ZrenAI · Token store{% endblock %}</title>
+  <title>{% block title %}众仁 · 额度商店{% endblock %}</title>
+  {% include "ui/assets.html" %}
   <link rel="stylesheet" href="{% static 'shop.css' %}">
 </head>
-<body>
+<body class="{% block bodyclass %}store-layout{% endblock %}">
+  <a class="zr-skip" href="#main-content">跳转到主要内容</a>
+  {% block navigation %}
   <header class="site-header">
-    <a class="brand" href="{% url 'store' %}"><span class="brand-icon">z</span> zrenai<span class="brand-caption">TOKEN STORE</span></a>
-    <nav aria-label="Main navigation">
+    {% include "ui/brand.html" with caption="额度商店" %}
+    <nav aria-label="主导航">
       {% if user.is_authenticated %}
-        <a href="{% url 'purchases' %}">My purchases</a>
-        {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
-        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="text-button">Log out</button></form>
-      {% else %}
-        {% if not request.academy_sso_enabled %}<a href="{% url 'login' %}">Log in</a><a class="button small" href="{% url 'signup' %}">Create account <span aria-hidden="true">↗</span></a>{% endif %}
+        <a href="{% url 'store' %}" {% if request.resolver_match.url_name == "store" %}aria-current="page"{% endif %}>套餐</a>
+        <a href="{% url 'purchases' %}">我的购买记录</a>
+        {% if user.is_staff %}<a href="{% url 'admin:index' %}">管理后台</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="zr-button zr-button--ghost zr-button--small">退出登录</button></form>
+      {% elif not request.academy_sso_enabled %}
+        <a href="{% url 'login' %}">登录</a>
+        <a class="zr-button zr-button--primary zr-button--small" href="{% url 'signup' %}">创建账号 {% include "ui/icon.html" with name="arrow-up-right" %}</a>
       {% endif %}
-      {% if request.academy_sso_enabled %}<a href="{{ request.academy_origin }}">Return to ZrenAI ↗</a>{% endif %}
+      {% if request.academy_sso_enabled %}<a class="academy-link" href="{{ request.academy_origin }}">众仁学院 {% include "ui/icon.html" with name="arrow-up-right" %}</a>{% endif %}
     </nav>
   </header>
-  <main>
-    {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+  {% endblock %}
+  <main id="main-content" class="{% block mainclass %}site-main{% endblock %}" tabindex="-1">
+    {% include "ui/messages.html" %}
     {% block content %}{% endblock %}
   </main>
-  <footer><span>© ZrenAI · A little credit. More possibilities.</span><span>Payments via Curlec</span></footer>
+  {% block footer %}<footer class="site-footer"><span>© 众仁 / 额度商店</span><span>单次购买，安全支付。</span></footer>{% endblock %}
+  <div id="ui-notification" class="ui-notification" role="status" aria-live="polite" hidden></div>
   {% block scripts %}{% endblock %}
 </body>
 </html>

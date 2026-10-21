@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block bodyclass %}workspace-layout{% endblock %}
+{% block mainclass %}workspace-main{% endblock %}
+{% block navigation %}
+<aside class="workspace-nav">
+  {% include "ui/brand.html" with caption="我的额度" %}
+  <p class="nav-eyebrow">我的工作台</p>
+  <nav aria-label="账号导航">
+    <a href="{% url 'store' %}">{% include "ui/icon.html" with name="grid" %}额度套餐</a>
+    <a href="{% url 'purchases' %}" aria-current="page">{% include "ui/icon.html" with name="shopping-bag" %}我的购买记录</a>
+    {% if user.is_staff %}<a href="{% url 'admin:index' %}">{% include "ui/icon.html" with name="settings" %}支付管理</a>{% endif %}
+    {% if request.academy_sso_enabled %}<a href="{{ request.academy_origin }}">{% include "ui/icon.html" with name="arrow-up-right" %}众仁学院</a>{% endif %}
+  </nav>
+  <div class="nav-bottom"><span class="zr-badge zr-badge--neutral">客户工作台</span><p>兑换码与订单，尽在此处。</p></div>
+</aside>
+<header class="workspace-topbar"><span>{% include "ui/icon.html" with name="grid" %} 账号 <span class="crumb-divider">/</span> 购买记录</span><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="zr-button--ghost zr-button--small">{% include "ui/icon.html" with name="log-out" %}退出登录</button></form></header>
+{% endblock %}
+{% block footer %}<footer class="workspace-footer">© 众仁 / 额度商店 <span>价格以马币计价 · 马来西亚时间</span></footer>{% endblock %}

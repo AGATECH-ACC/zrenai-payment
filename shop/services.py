@@ -21,7 +21,7 @@ def validate_provider_order(order, remote):
         or not remote["id"].startswith("order_")
         or (order.provider_order_id and order.provider_order_id != remote["id"])
     ):
-        raise curlec.PaymentError("The provider order does not match this purchase.")
+        raise curlec.PaymentError("支付平台订单与当前订单不一致。")
 
 
 def start_checkout(user, product_id):
@@ -36,14 +36,14 @@ def start_checkout(user, product_id):
         if existing:
             if existing.provider_order_id and existing.status == Order.Status.PENDING:
                 return existing
-            raise InventoryError("Your previous checkout is being checked. See My purchases or contact the store.")
+            raise InventoryError("上一笔支付正在核对中，请查看购买记录或联系店主。")
         if Order.objects.filter(user=user).exclude(status=Order.Status.PAID).count() >= 3:
-            raise InventoryError("Please complete your existing purchases before starting another.")
+            raise InventoryError("请先完成已有订单，再发起新的购买。")
         token = TokenCode.objects.filter(product=product, order__isnull=True).select_for_update(
             of=("self",),
         ).order_by("pk").first()
         if token is None:
-            raise InventoryError("This product is sold out.")
+            raise InventoryError("此套餐已售罄。")
         order = Order.objects.create(
             user=user, product=product, product_name=product.name,
             token=token, amount=product.price_sen,
@@ -70,24 +70,24 @@ def start_checkout(user, product_id):
 def fulfill_payment(payment_id, expected_order=None):
     payment = curlec.fetch_payment(payment_id)
     if payment.get("id") != payment_id:
-        raise curlec.PaymentError("The payment reference does not match.")
+        raise curlec.PaymentError("支付编号不一致。")
     provider_order_id = payment.get("order_id")
     remote = curlec.fetch_order(provider_order_id)
     try:
         order = Order.objects.get(pk=remote.get("receipt"))
     except (Order.DoesNotExist, ValidationError, ValueError, TypeError):
-        raise curlec.PaymentError("Unknown purchase.")
+        raise curlec.PaymentError("找不到该订单。")
     if remote.get("id") != provider_order_id:
-        raise curlec.PaymentError("The provider order reference does not match.")
+        raise curlec.PaymentError("支付平台订单编号不一致。")
     if expected_order and order.pk != expected_order.pk:
-        raise curlec.PaymentError("Payment belongs to a different purchase.")
+        raise curlec.PaymentError("该支付属于其他订单。")
     validate_provider_order(order, remote)
     if (
         payment.get("amount") != order.amount
         or payment.get("currency") != order.currency
         or payment.get("amount_refunded", 0) != 0
     ):
-        raise curlec.PaymentError("Payment amount or currency does not match the purchase.")
+        raise curlec.PaymentError("支付金额或币种与订单不一致。")
     if payment.get("status") != "captured" or payment.get("captured") is not True:
         return order  # Authorization alone must never release a token.
     with transaction.atomic():
@@ -95,7 +95,7 @@ def fulfill_payment(payment_id, expected_order=None):
         validate_provider_order(order, remote)
         if order.status == Order.Status.PAID:
             if order.payment_id != payment_id:
-                raise curlec.PaymentError("This purchase already has a different payment.")
+                raise curlec.PaymentError("此订单已关联另一笔支付。")
             return order
         order.provider_order_id = provider_order_id
         order.payment_id = payment_id
@@ -107,8 +107,8 @@ def fulfill_payment(payment_id, expected_order=None):
 
 def verify_callback(order, payment_id, signature):
     if not order.provider_order_id:
-        raise curlec.PaymentError("This order needs reconciliation.")
+        raise curlec.PaymentError("此订单需要核对支付。")
     message = f"{order.provider_order_id}|{payment_id}".encode()
     if not curlec.valid_signature(message, signature, settings.CURLEC_KEY_SECRET):
-        raise curlec.PaymentError("Invalid payment signature.")
+        raise curlec.PaymentError("支付签名无效。")
     return fulfill_payment(payment_id, expected_order=order)

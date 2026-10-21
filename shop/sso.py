@@ -85,7 +85,7 @@ def start(request):
 @require_GET
 def callback(request):
     if not settings.ACADEMY_SSO_ENABLED:
-        return HttpResponse("Academy sign-in is unavailable.", status=503)
+        return HttpResponse("学院登录暂不可用。", status=503)
     pending = request.session.pop("academy_pending", None)
     state, code = request.GET.get("state", ""), request.GET.get("code", "")
     if (not pending or time.time() - pending.get("created", 0) > 300 or
@@ -156,9 +156,9 @@ class AcademySessionMiddleware:
                     request.user.save(update_fields=["email"])
             except IdentityError as error:
                 if error.unavailable:
-                    return JsonResponse({"error": "ZrenAI sign-in is temporarily unavailable. Please retry."}, status=503)
+                    return JsonResponse({"error": "众仁登录暂不可用，请重试。"}, status=503)
                 logout(request)
                 if request.path.startswith("/api/"):
-                    return JsonResponse({"error": "Your ZrenAI session expired. Please sign in again."}, status=401)
+                    return JsonResponse({"error": "您的众仁登录状态已过期，请重新登录。"}, status=401)
                 return redirect(reverse("login") + "?" + urlencode({"next": request.get_full_path()}))
         return self.get_response(request)

@@ -316,3 +316,14 @@ is not configured; administrators can reset accounts after verifying ownership.
 - [Webhook validation and testing](https://curlec.com/docs/webhooks/validate-test/)
 - [Fetch a payment](https://curlec.com/docs/api/payments/fetch-with-id/)
 - [Subscriptions API, for a future recurring flow](https://curlec.com/docs/api/payments/subscriptions)
+
+## Mono Intelligence UI (Option 04)
+
+The storefront, customer purchase workspace and Django payment admin share the
+local UI kit in `static/ui/`. See [the component and verification guide](docs/mono-ui.md)
+for component APIs, permissions/data rules, changed files and local screenshots.
+
+Preview with `.venv/bin/python manage.py runserver 127.0.0.1:8001`, then open
+`http://127.0.0.1:8001/` or `/admin/`. Use the existing local account; the local
+SQLite catalog may be empty. Production authentication and data settings remain
+unchanged. The UI changes are local until explicitly deployed.

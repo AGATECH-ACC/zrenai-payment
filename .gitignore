@@ -9,3 +9,6 @@ __pycache__/
 staticfiles/
 .DS_Store
 data/
+
+# Original design references; runtime assets and licenses are in static/.
+Mono-Intelligence-UI-Kit-2026-10-21 2/

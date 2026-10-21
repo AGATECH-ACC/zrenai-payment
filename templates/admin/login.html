@@ -1,73 +1,73 @@
 {% load static %}
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hans">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, noarchive">
-  <title>{% if form.errors %}Sign-in error · {% endif %}ZrenAI · Payment admin</title>
-  <link rel="stylesheet" href="{% static 'shop.css' %}">
+  <title>{% if form.errors %}登录失败 · {% endif %}众仁 · 支付管理</title>
+  {% include "ui/assets.html" %}
   <link rel="stylesheet" href="{% static 'admin-login.css' %}">
   {{ form.media }}
 </head>
 <body class="admin-login">
-  <a class="skip-link" href="#admin-sign-in">Skip to sign in</a>
+  <a class="skip-link" href="#admin-sign-in">跳转到登录表单</a>
   <header class="admin-header">
-    <a class="brand" href="{% url 'store' %}" aria-label="ZrenAI token store"><span class="brand-icon" aria-hidden="true">z</span> zrenai<span class="brand-caption">PAYMENT ADMIN</span></a>
-    <a class="store-link" href="{% url 'store' %}">Back to token store <span aria-hidden="true">↗</span></a>
+    {% include "ui/brand.html" with caption="支付管理" %}
+    <a class="store-link" href="{% url 'store' %}">返回额度商店 <span aria-hidden="true">↗</span></a>
   </header>
   <main class="admin-layout">
     <section class="admin-intro" aria-labelledby="intro-title">
-      <p class="eyebrow">ZRENAI / STORE OPERATIONS</p>
-      <h1 id="intro-title">Your store.<br><em>Under control.</em></h1>
-      <p class="admin-description">A dedicated workspace for your token packages, codes and customer purchases.</p>
+      <p class="eyebrow">众仁 / 商店管理</p>
+      <h1 id="intro-title">您的商店，<br><em>尽在掌握。</em></h1>
+      <p class="admin-description">统一管理额度套餐、兑换码库存和客户订单。</p>
       <ol class="admin-features">
-        <li><span aria-hidden="true">01</span><div><h2>Set up your packages</h2><p>Manage product details and MYR prices.</p></div></li>
-        <li><span aria-hidden="true">02</span><div><h2>Keep your codes ready</h2><p>Add token codes and check available inventory.</p></div></li>
-        <li><span aria-hidden="true">03</span><div><h2>Follow each purchase</h2><p>View payment status and the assigned code.</p></div></li>
+        <li><span aria-hidden="true">01</span><div><h2>设置额度套餐</h2><p>管理套餐详情及马币售价。</p></div></li>
+        <li><span aria-hidden="true">02</span><div><h2>备好兑换码</h2><p>添加兑换码，查看可用库存。</p></div></li>
+        <li><span aria-hidden="true">03</span><div><h2>跟进每笔订单</h2><p>查看支付状态及已分配的兑换码。</p></div></li>
       </ol>
-      <div class="admin-intro-footer"><span class="admin-status-dot" aria-hidden="true"></span> ZrenAI token store <span aria-hidden="true">✳</span></div>
+      <div class="admin-intro-footer"><span class="admin-status-dot" aria-hidden="true"></span> 众仁额度商店 <span aria-hidden="true">✳</span></div>
     </section>
     <section class="admin-form-panel" aria-labelledby="admin-sign-in">
       <div class="admin-form-heading">
-        <span class="admin-lock" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg></span>
-        <span class="admin-access-label">STAFF ACCESS</span>
+        <span class="admin-lock" aria-hidden="true">{% include "ui/icon.html" with name="lock" %}</span>
+        <span class="admin-access-label">管理员入口</span>
       </div>
-      <h2 id="admin-sign-in" tabindex="-1">Sign in to manage<br>your token store.</h2>
-      <p class="admin-form-description">Use your payment administrator account.</p>
+      <h2 id="admin-sign-in" tabindex="-1">登录后台，<br>管理您的额度商店。</h2>
+      <p class="admin-form-description">请使用支付管理员账号登录。</p>
 
       {% if user.is_authenticated and not user.is_staff %}
       <div class="admin-account-notice" role="status">
-        <strong>Your customer account is signed in.</strong>
-        <p>To manage packages and token codes, sign in below with a payment administrator account. Your academy login is used for shopping.</p>
+        <strong>您已登录客户账号。</strong>
+        <p>学院账号用于购买套餐。管理套餐和兑换码需要使用支付管理员账号，请在下方登录。</p>
       </div>
       {% endif %}
 
       {% if form.errors %}
       <div class="admin-errors" role="alert">
-        {% if form.non_field_errors %}{{ form.non_field_errors }}{% else %}Please check the fields below and try again.{% endif %}
+        {% if form.non_field_errors %}{{ form.non_field_errors }}{% else %}请检查下方填写内容后重试。{% endif %}
       </div>
       {% endif %}
 
       <form action="{{ app_path }}" method="post" id="login-form">
         {% csrf_token %}
         <div class="admin-field">
-          <label for="{{ form.username.id_for_label }}">Admin username</label>
+          <label for="{{ form.username.id_for_label }}">管理员用户名</label>
           {{ form.username }}
           {{ form.username.errors }}
         </div>
         <div class="admin-field">
-          <label for="{{ form.password.id_for_label }}">Password</label>
+          <label for="{{ form.password.id_for_label }}">密码</label>
           {{ form.password }}
           {{ form.password.errors }}
         </div>
         <input type="hidden" name="next" value="{{ next }}">
-        <button class="button full admin-submit" type="submit">Sign in to admin <span aria-hidden="true">→</span></button>
+        <button class="zr-button--primary full admin-submit" type="submit">登录管理后台 <span aria-hidden="true">→</span></button>
       </form>
-      <p class="admin-login-help">Need admin access?<br>Ask the store owner for a payment administrator account.</p>
-      <div class="admin-customer-link"><span>Here to buy tokens?</span><a href="{% url 'store' %}">Go to the store <span aria-hidden="true">↗</span></a></div>
+      <p class="admin-login-help">需要管理权限？<br>请联系店主获取支付管理员账号。</p>
+      <div class="admin-customer-link"><span>想要购买额度？</span><a href="{% url 'store' %}">前往商店 <span aria-hidden="true">↗</span></a></div>
     </section>
   </main>
-  <footer class="admin-footer"><span>© ZrenAI</span><span>Token packages · Code inventory · Purchases</span></footer>
+  <footer class="admin-footer"><span>© 众仁</span><span>额度套餐 · 兑换码库存 · 购买记录</span></footer>
 </body>
 </html>

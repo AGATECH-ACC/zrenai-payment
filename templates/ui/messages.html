@@ -1,0 +1,1 @@
+{% for message in messages %}<div class="zr-alert {% if message.tags == 'success' %}zr-alert--success{% else %}zr-alert--info{% endif %} app-message" role="status"><span>{{ message }}</span><button class="zr-button--ghost zr-button--small" type="button" data-dismiss-message aria-label="关闭通知">{% include "ui/icon.html" with name="x" %}</button></div>{% endfor %}
